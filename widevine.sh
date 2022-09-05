@@ -19,6 +19,7 @@ function confirm()
 function widevine_install {
 
 _chrome_ver=$( web -version | grep -oP '(?<=Chromium )[^ ]*')
+_chrome_ver_major=$(echo $_chrome_ver | cut -f1 -d.)
 
 _l_target_dir=~/.local/lib/WidevineCdm
 _target_dir=/opt/ungoogled-chromium/WidevineCdm
@@ -28,9 +29,9 @@ if [[ "${1}" == "-l" ]]; then
     _sudo=""
 	_target_dir=$_l_target_dir
 	shift
-fi	
+fi
 
-echo "install widevineCDM for chromium version $_chrome_ver"
+echo "install widevineCDM for chromium version $_chrome_ver_major ($_chrome_ver)"
 echo "into $_target_dir"
 
 confirm "confirm (y/n)" || exit
@@ -45,23 +46,31 @@ pushd $_temp &> /dev/null || exit
 if [[ "${1}" == "-u" ]]; then
     _un="un"
 fi
-_url=https://dl.google.com/linux/deb/pool/main/g/google-chrome-${_un}stable/google-chrome-${_un}stable_${_chrome_ver}-1_amd64.deb
-echo downloading $_url
 
-exit
-wget -c $_url || exit
+wget "https://dl.google.com/linux/deb/dists/stable/main/binary-amd64/Packages"
+_package_path=$(grep -o "pool/main/g/google-chrome-stable/google-chrome-${_un}stable_${_chrome_ver_major}.*deb" Packages)
 
-# Unpack deb
-rm -r unpack_deb &> /dev/null || true
-mkdir -p unpack_deb
-echo extracting package...
-dpkg-deb -R google-chrome-stable_${_chrome_ver}-1_amd64.deb unpack_deb || exit
-echo removing any old WidevineCDM installs at $_target_dir
-$_sudo rm -r $_target_dir &> /dev/null || true
-echo moving WidevineCDM to target $_target_dir
-$_sudo mv unpack_deb/opt/google/chrome/WidevineCdm $_target_dir &> /dev/null || exit
-[[ $_sudo ]] && $_sudo chown -R root:root $_target_dir 
-echo done, removing $_temp
+if [[ "${?}" != "0" ]]; then
+    echo "No version found in Google repo."
+else
+    _url=https://dl.google.com/linux/deb/$_package_path
+    echo downloading $_url
+    wget -c $_url || exit
+    # Unpack deb
+
+    rm -r unpack_deb &> /dev/null || true
+    mkdir -p unpack_deb
+    echo extracting package...
+    dpkg-deb -R google-chrome-*.deb unpack_deb || exit
+    echo removing any old WidevineCDM installs at $_target_dir
+    $_sudo rm -r $_target_dir &> /dev/null || true
+    echo moving WidevineCDM to target $_target_dir
+    $_sudo mv unpack_deb/opt/google/chrome/WidevineCdm $_target_dir &> /dev/null || exit
+    [[ $_sudo ]] && $_sudo chown -R root:root $_target_dir 
+    echo done
+fi
+
+echo removing $_temp
 rm -r $_temp &> /dev/null || true
 popd &> /dev/null
 
