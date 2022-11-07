@@ -18,7 +18,7 @@ function confirm()
 
 function widevine_install {
 
-_chrome_ver=$( web -version | grep -oP '(?<=Chromium )[^ ]*')
+_chrome_ver=$( ungoogled-chromium -version | grep -oP '(?<=Chromium )[^ ]*')
 _chrome_ver_major=$(echo $_chrome_ver | cut -f1 -d.)
 
 _l_target_dir=~/.local/lib/WidevineCdm
