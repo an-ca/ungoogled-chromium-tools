@@ -1,4 +1,6 @@
-# Install Widevine for ungoogled-chromium from Google Chrome
+# Utility tools to handle ungoogled-chromium installation
+
+## `widevine.sh`: install Widevine for ungoogled-chromium from Google Chrome
 
 Based on script by [dkebler](https://gist.github.com/dkebler/b90ca57ac481a428dcb6cbbd1e36553d).
 
